@@ -27,7 +27,7 @@ var refreshLocationList = function() {
   var newLocations = [];
 
   for (var i = 0; i < jumi_locations.length; i++) {
-    if (jumi_locations[i].title.indexOf(filterStr) >= 0) {
+    if (jumi_locations[i].title.toLowerCase().indexOf(filterStr.toLowerCase()) >= 0) {
       newLocations.push(jumi_locations[i]);
     }
   }
