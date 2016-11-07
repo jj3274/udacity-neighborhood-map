@@ -98,6 +98,7 @@ function showListings() {
 }
 
 function refreshListings(locations) {
+  hideMarkers(markers);
   var bounds = new google.maps.LatLngBounds();
   // Extend the boundaries of the map for each marker and display the marker
   for (var i = 0; i < locations.length; i++) {
@@ -112,13 +113,6 @@ function refreshListings(locations) {
 
 // This function will loop through the listings and hide them all.
 function hideMarkers(markers) {
-  for (var i = 0; i < markers.length; i++) {
-    markers[i].setMap(null);
-  }
-}
-
-// This function will loop through the listings and hide them all.
-function hideListings() {
   for (var i = 0; i < markers.length; i++) {
     markers[i].setMap(null);
   }
