@@ -21,7 +21,7 @@ var showLocationList = function(locations) {
 
 showLocationList(jumi_locations);
 
-$( "#filter-btn" ).click(function() {
+var refreshLocationList = function() {
   var filterStr = $("#filter-input").val();
 
   var newLocations = [];
@@ -34,6 +34,13 @@ $( "#filter-btn" ).click(function() {
 
   showLocationList(newLocations);
   refreshListings(newLocations);
-  // alert( filterStr );
+}
 
-});
+var filter_input_onkeypress = function(e) {
+    if (e.keyCode == 13) {
+        refreshLocationList();
+        return false;
+    }
+}
+
+$( "#filter-btn" ).click(refreshLocationList());
