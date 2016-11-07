@@ -37,10 +37,8 @@ var refreshLocationList = function() {
 }
 
 var filter_input_onkeypress = function(e) {
-    if (e.keyCode == 13) {
+    // if (e.keyCode == 13) {
         refreshLocationList();
-        return false;
-    }
+        return true;
+    // }
 }
-
-$( "#filter-btn" ).click(refreshLocationList());
