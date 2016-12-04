@@ -11,6 +11,11 @@ var polygon = null;
 // Create placemarkers array to use in multiple functions to have control
 // over the number of places that show.
 var placeMarkers = [];
+var streetviewApiKey = 'AIzaSyA4HRSTeqi-Yr0UWHCaxXd56DB5kZjW-5U';
+var streetviewApiUrl = 'https://maps.googleapis.com/maps/api/streetview?size=200x200&location=';
+var streetviewApiUrlParam = '&fov=90&heading=235&pitch=10&key=';
+
+var geocodeApiKey = 'AIzaSyD0kQxpo0WfCocy54JQ9SUPcGrK83XZ5Og';
 
 function initMap() {
 
@@ -24,9 +29,11 @@ function initMap() {
   locations = jumi_locations;
 
   var largeInfowindow = new google.maps.InfoWindow();
+  var geocoder = new google.maps.Geocoder();
 
   // Style the markers a bit. This will be our listing marker icon.
   var defaultIcon = makeMarkerIcon('0091ff');
+  var customIconUrl = 'https://lh3.googleusercontent.com/VNfRfhtu9zdJPBMTdQl81aEAfbDvqs8N5hmvsYK9Z9RPJSipwGXBLvA5X67_z8_uad9CHGTNzLVNsSC35OPqq_7Hdg5zN-y2QB7cu5B4X5eqLUf4HVDO7VUdMQwXoGmxvhJ0bgdIipOZDvSXYspY5vbRHFJ9EgRno0LiYLQMUwEipPi3yzi91DRH4W1wr9V6Z2eK2BLnhBNMtAm4qVGNN9FztqHL3IOVe1rKYdjgqlfZjaVXE9fvgAIHreiAm0UcJOsQRpVDF6Bj7T6VF7gf_DDsbApOtC-q7lm1IPDmb-acj0-XBO69m5UIIpPQo4A2KVlzYjJc5IsEgvThYMo2VbLxs1FVXot_gURhXUrJmw7w5o3YWEMhXqNR6o-s4q7br7q0HMb_nHrxhO0PjXaDLrEpkfLSJN0JZW6U6ZdaS5quB3HaXQw4-sEoxma1NfpckLMmYxZ9wS3Ju62j_M6mkALx06QOuku8Uz6IqF6Hyf82WWbiFgf94vkQwNtuRA_J45Fr9I_LWDLNsM0cck76zscAySsSZZwxafRoSB_eK-uXf1fNj0PNo-9NBP2JEjhM9YUEPL1Jt3yuXIDBeIF2TkRVOnYtACG1tF6QxzdLL-jPsoDY=h32-no';
 
   // Create a "highlighted location" marker color for when the user
   // mouses over the marker.
@@ -35,22 +42,23 @@ function initMap() {
   // The following group uses the location array to create an array of markers on initialize.
   for (var i = 0; i < locations.length; i++) {
     // Get the position from the location array.
-    var position = locations[i].location;
+    var position = locations[i].location; // {lat: xxx, lng: yyy}
     var title = locations[i].title;
     // Create a marker per location, and put into markers array.
     var marker = new google.maps.Marker({
       position: position,
       title: title,
       animation: google.maps.Animation.DROP,
-      icon: defaultIcon,
+      icon: customIconUrl,
       id: i
     });
+
     // Push the marker to our array of markers.
     markers.push(marker);
     markersForTitle[title] = marker;
     // Create an onclick event to open the large infowindow at each marker.
     marker.addListener('click', function() {
-      populateInfoWindow(this, largeInfowindow);
+      populateInfoWindow(this, largeInfowindow, geocoder);
     });
     // Two event listeners - one for mouseover, one for mouseout,
     // to change the colors back and forth.
@@ -58,7 +66,7 @@ function initMap() {
       this.setIcon(highlightedIcon);
     });
     marker.addListener('mouseout', function() {
-      this.setIcon(defaultIcon);
+      this.setIcon(customIconUrl);
     });
   }
 
@@ -73,17 +81,41 @@ function initMap() {
 // This function populates the infowindow when the marker is clicked. We'll only allow
 // one infowindow which will open at the marker that is clicked, and populate based
 // on that markers position.
-function populateInfoWindow(marker, infowindow) {
-  // Check to make sure the infowindow is not already opened on this marker.
-  if (infowindow.marker != marker) {
-    infowindow.marker = marker;
-    infowindow.setContent('<div>' + marker.title + '</div>');
-    infowindow.open(map, marker);
-    // Make sure the marker property is cleared if the infowindow is closed.
-    infowindow.addListener('closeclick', function() {
-      infowindow.marker = null;
-    });
-  }
+function populateInfoWindow(marker, infowindow, geocoder) {
+
+  var latlng = {lat: marker.position.lat(), lng: marker.position.lng()};
+  geocoder.geocode({'location': latlng}, function(results, status) {
+    var address = 'No address found';
+
+          if (status === 'OK') {
+            if (results[1]) {
+              address = results[1].formatted_address;
+            } else {
+              window.alert('No results found');
+            }
+          } else {
+            window.alert('Geocoder failed due to: ' + status);
+          }
+
+        var locationStr = marker.position.lat() + ', ' + marker.position.lng(); // locationStr = 'xxx, yyy'
+        var streetviewImgUrl = streetviewApiUrl + locationStr + streetviewApiUrlParam + streetviewApiKey;
+
+        if (infowindow.marker != marker) {
+          infowindow.marker = marker;
+          var content = '<div>' +
+                          '<div>' + marker.title + '</div>' +
+                          '<div>' + address + '</div>' +
+                          '<img src=\'' + streetviewImgUrl + '\'>' +
+                        '</div>';
+          infowindow.setContent(content);
+          infowindow.open(map, marker);
+          // Make sure the marker property is cleared if the infowindow is closed.
+          infowindow.addListener('closeclick', function() {
+            infowindow.marker = null;
+          });
+        }
+      });
+
 }
 
 // This function will loop through the markers array and display them all.
